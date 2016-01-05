@@ -60,7 +60,8 @@ class Basic(QtGui.QMainWindow):
             QtGui.QFileDialog.ShowDirsOnly)
         folder_name = str(folder_name)  # QString --> Python String
 
-        self.reader = read_image.read_dicom(folder_name)
+        # self.reader = read_image.read_dicom(folder_name)
+        dicom = self.reader.read_dicom(folder_name)
 
     def on_open_metaimage(self):
 
