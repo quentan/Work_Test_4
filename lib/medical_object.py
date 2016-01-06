@@ -23,6 +23,7 @@ class MedicalObject(object):
         self.bounds = self.reader.GetBounds()
         self.spacing = self.reader.GetSpacing()
         self.origin = self.reader.GetOrigin()
+        self.value_range = self.reader.GetScalarRange()
 
         self.flag_read = False
 
@@ -130,9 +131,25 @@ class MedicalObject(object):
         stripper.ReleaseDataFlagOn()
 
         mapper.SetInputConnection(stripper.GetOutputPort())
+        mapper.SetScalarVisibility(False)
 
         self.actor.SetMapper(mapper)
+
+        # Default colour, should be changed.
+        self.actor.GetProperty().SetDiffuseColor(
+            [247.0 / 255.0, 150.0 / 255.0, 155.0 / 255.0])  # Look like red
+        self.actor.GetProperty().SetSpecular(0.3)
+        self.actor.GetProperty().SetSpecularPower(20)
 
     def render(self, renderer):
 
         renderer.AddActor(self.actor)
+
+    def clean(self, renderer):
+
+        renderer.RemoveActor(self.actor)
+
+    def get_value_range(self):
+
+        value_range = self.reader.GetScalarRange()
+        return value_range

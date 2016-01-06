@@ -56,7 +56,12 @@ class Basic(QtGui.QMainWindow):
         self.marker.show()
         # self.ui.annotationChk.toggle()
 
+        # TEST
+        # self.ui.test_spin.value = 500
+        self.ui.test_spin.valueChanged.connect(self.on_test_spin)
+
         self.move(100, 100)
+        self.setWindowTitle('Prototype')
         self.show()
 
     # Event Response Function
@@ -70,10 +75,17 @@ class Basic(QtGui.QMainWindow):
 
         if folder_name:
 
-            reader = MedicalObject()
-            reader.read_dicom(folder_name)
-            reader.get_isosurface(500)
-            reader.render(self.ren)
+            self.reader = MedicalObject()
+            self.reader.read_dicom(folder_name)
+            self.reader.get_isosurface(500)
+            self.reader.render(self.ren)
+
+            # Test
+            min, max = self.reader.get_value_range()
+            self.ui.test_spin.setMinimum(min)
+            self.ui.test_spin.setMaximum(max)
+            self.ui.test_spin.setSingleStep(50)
+            self.ui.test_spin.setValue(int(max - (max-min)*0.618))
 
             self.better_camera()
             self.ren_win.Render()
@@ -98,10 +110,6 @@ class Basic(QtGui.QMainWindow):
             self.better_camera()
             self.ren_win.Render()
 
-    def on_test_btn(self):
-
-        pass
-
     def better_camera(self):
 
         self.ren.ResetCamera()
@@ -110,6 +118,23 @@ class Basic(QtGui.QMainWindow):
         cam.SetViewUp(0, 0, -1)
         cam.Azimuth(45)
         self.ren.ResetCameraClippingRange()
+
+    # TEST
+    def on_test_btn(self):
+        pass
+
+    def on_test_spin(self):
+
+        value = self.ui.test_spin.value()
+
+        self.reader.clean(self.ren)
+        self.reader.get_isosurface(value)
+        self.reader.render(self.ren)
+
+        # self.better_camera()
+        self.ren.ResetCamera()
+        self.ren_win.Render()
+
 
 if __name__ == '__main__':
 

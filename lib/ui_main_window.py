@@ -39,13 +39,15 @@ class Ui_MainWindow(object):
         self.open_dicom_btn = QtGui.QPushButton('&Open DICOM folder')
         self.open_meta_btn = QtGui.QPushButton('Open Meta Image')
 
-        self.test_btn = QtGui.QPushButton('Test Image Loading')
-
         # Layout of widgets
         self.gridlayout.addWidget(self.vtk_widget, 2, 0, 10, 1)
         self.gridlayout.addWidget(self.open_dicom_btn, 2, 1)
         self.gridlayout.addWidget(self.open_meta_btn, 3, 1)
 
+        # TEST
+        self.test_btn = QtGui.QPushButton('Test Image Loading')
         self.gridlayout.addWidget(self.test_btn, 10, 1)
+        self.test_spin = QtGui.QSpinBox()
+        self.gridlayout.addWidget(self.test_spin, 11, 1)
 
         main_window.setCentralWidget(self.central_widget)
