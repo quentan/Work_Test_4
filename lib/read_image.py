@@ -10,10 +10,10 @@ import SimpleITK as sitk
 from vtk.util import numpy_support
 
 
-class read_image(object):
+class ReadImage(object):
 
     '''
-    Base class
+    Class of reading medical images
     '''
 
     def __init__(self):
