@@ -13,8 +13,8 @@ from PyQt4 import QtGui
 from PyQt4 import QtCore
 
 from lib import ui_main_window
-from lib import read_image
-from lib import volume_rendering
+from lib.medical_object import MedicalObject
+from lib.annotation_cube import Marker
 
 
 class Basic(QtGui.QMainWindow):
@@ -48,22 +48,16 @@ class Basic(QtGui.QMainWindow):
         self.iren = self.ren_win.GetInteractor()
         self.iren.Initialize()
 
-        self.reader = read_image.ReadImage()
-
         self.ui.open_dicom_btn.clicked.connect(self.on_open_dicom_folder)
         self.ui.open_meta_btn.clicked.connect(self.on_open_metaimage)
         self.ui.test_btn.clicked.connect(self.on_test_btn)
 
+        self.marker = Marker(self.iren)  # Annotation Cube
+        self.marker.show()
+        # self.ui.annotationChk.toggle()
+
         self.move(100, 100)
         self.show()
-
-    def show_isosurface(vtk_source):
-
-        actor = vtk.vtkActor()
-        mapper = vtk.vtkPolyDataMapper()
-
-        isosurface = volume_rendering.Isosurface(
-            self.ren, actor, mapper, vtk_source, 500)
 
     # Event Response Function
     def on_open_dicom_folder(self):
@@ -75,37 +69,13 @@ class Basic(QtGui.QMainWindow):
         logging.info('No folder selected.')
 
         if folder_name:
-            dicom_reader = read_image.ReadImage()
-            dicom = dicom_reader.read_dicom(folder_name)
-            # dicom = self.reader.read_dicom(folder_name)
 
-            # isosurface = volume_rendering.Iso_test(
-            #     self.ren, dicom, iso_value=500)
+            reader = MedicalObject()
+            reader.read_dicom(folder_name)
+            reader.get_isosurface(500)
+            reader.render(self.ren)
 
-            contour = vtk.vtkContourFilter()
-            normals = vtk.vtkPolyDataNormals()
-            stripper = vtk.vtkStripper()
-            mapper = vtk.vtkPolyDataMapper()
-            actor = vtk.vtkActor()
-
-            # contour.SetInputConnection(dicom.GetOutputPort())
-            contour.SetInputData(dicom)
-            contour.SetValue(0, 500)
-
-            normals.SetInputConnection(contour.GetOutputPort())
-            normals.SetFeatureAngle(60.0)
-            normals.ReleaseDataFlagOn()
-
-            stripper.SetInputConnection(normals.GetOutputPort())
-            stripper.ReleaseDataFlagOn()
-
-            mapper.SetInputConnection(stripper.GetOutputPort())
-
-            actor.SetMapper(mapper)
-
-            self.ren.AddActor(actor)
-
-            self.ren.ResetCamera()
+            self.better_camera()
             self.ren_win.Render()
 
     def on_open_metaimage(self):
@@ -119,76 +89,27 @@ class Basic(QtGui.QMainWindow):
         logging.info('No file selected.')
 
         if file_name:  # if file_name is not an empty string
-            # meta = self.reader.read_metaimage(file_name)
-            reader = vtk.vtkMetaImageReader()
-            reader.SetFileName(file_name)
 
-            cast = vtk.vtkImageCast()
-            # cast.SetInputData(img_vtk)
-            cast.SetInputConnection(reader.GetOutputPort())
-            cast.SetOutputScalarType(5)
-            cast.Update()
-            meta = cast.GetOutput()  # The output of `cast` is a vtkImageData
-            # meta = reader.GetOutput()
+            reader = MedicalObject()
+            reader.read_metaimage(file_name)
+            reader.get_isosurface(500)
+            reader.render(self.ren)
 
-            # isosurface = volume_rendering.Iso_test(self.ren, meta, -500)
-            contour = vtk.vtkContourFilter()
-            normals = vtk.vtkPolyDataNormals()
-            stripper = vtk.vtkStripper()
-            mapper = vtk.vtkPolyDataMapper()
-            actor = vtk.vtkActor()
-
-            contour.SetInputData(meta)
-            contour.SetValue(0, 500)
-
-            normals.SetInputConnection(contour.GetOutputPort())
-            normals.SetFeatureAngle(60.0)
-            normals.ReleaseDataFlagOn()
-
-            stripper.SetInputConnection(normals.GetOutputPort())
-            stripper.ReleaseDataFlagOn()
-
-            mapper.SetInputConnection(stripper.GetOutputPort())
-
-            actor.SetMapper(mapper)
-
-            self.ren.AddActor(actor)
-
-            self.ren.ResetCamera()
+            self.better_camera()
             self.ren_win.Render()
 
     def on_test_btn(self):
 
-        from vtk.util.misc import vtkGetDataRoot
-        VTK_DATA_ROOT = vtkGetDataRoot()
+        pass
 
-        v16 = vtk.vtkVolume16Reader()
-        v16.SetDataDimensions(64, 64)
-        v16.SetDataByteOrderToLittleEndian()
-        v16.SetFilePrefix(VTK_DATA_ROOT + "/Data/headsq/quarter")
-        v16.SetImageRange(1, 93)
-        v16.SetDataSpacing(3.2, 3.2, 1.5)
-
-        skinExtractor = vtk.vtkContourFilter()
-        skinExtractor.SetInputConnection(v16.GetOutputPort())
-        skinExtractor.SetValue(0, 500)
-        skinNormals = vtk.vtkPolyDataNormals()
-        skinNormals.SetInputConnection(skinExtractor.GetOutputPort())
-        skinNormals.SetFeatureAngle(60.0)
-        skinMapper = vtk.vtkPolyDataMapper()
-        skinMapper.SetInputConnection(skinNormals.GetOutputPort())
-        skinMapper.ScalarVisibilityOff()
-        skin = vtk.vtkActor()
-        skin.SetMapper(skinMapper)
-
-        self.ren.AddActor(skin)
-        self.ren.ResetCamera()
-        self.ren_win.Render()
-
-    # Auxiliary Function
     def better_camera(self):
 
         self.ren.ResetCamera()
+        cam = self.ren.GetActiveCamera()
+        cam.Elevation(110)
+        cam.SetViewUp(0, 0, -1)
+        cam.Azimuth(45)
+        self.ren.ResetCameraClippingRange()
 
 if __name__ == '__main__':
 
