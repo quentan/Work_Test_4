@@ -7,7 +7,7 @@
 import sys
 import vtk
 import logging
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
 
 from PyQt4 import QtGui
 from PyQt4 import QtCore
@@ -48,13 +48,20 @@ class Basic(QtGui.QMainWindow):
         self.iren = self.ren_win.GetInteractor()
         self.iren.Initialize()
 
-        self.ui.open_dicom_btn.clicked.connect(self.on_open_dicom_folder)
-        self.ui.open_meta_btn.clicked.connect(self.on_open_metaimage)
+        self.ui.open_folder_btn.clicked[bool].connect(self.on_open_folder)
+        self.ui.open_file_btn.clicked.connect(self.on_open_file)
         self.ui.test_btn.clicked.connect(self.on_test_btn)
+        # self.ui.volume_btn.clicked.connect(self.on_volume_btn)
+        self.ui.vol_cbox.stateChanged.connect(self.on_volume_cbox)
 
         self.marker = Marker(self.iren)  # Annotation Cube
         self.marker.show()
         # self.ui.annotationChk.toggle()
+
+        self.path_name = None
+        self.ui.vol_cbox.setCheckable(False)
+        self.ui.iso_cbox.setCheckable(False)
+        self.ui.plane_cbox.setCheckable(False)
 
         # TEST
         # self.ui.test_spin.value = 500
@@ -65,7 +72,10 @@ class Basic(QtGui.QMainWindow):
         self.show()
 
     # Event Response Function
-    def on_open_dicom_folder(self):
+    def on_open_folder(self):
+
+        if self.ui.open_file_btn.isChecked():
+            return
 
         folder_name = QtGui.QFileDialog.getExistingDirectory(
             self, 'Open DICOM Folder', QtCore.QDir.currentPath(),
@@ -73,24 +83,33 @@ class Basic(QtGui.QMainWindow):
         folder_name = str(folder_name)  # QString --> Python String
         logging.info('No folder selected.')
 
+        self.path_name = folder_name
+
         if folder_name:
 
-            self.reader = MedicalObject()
-            self.reader.read_dicom(folder_name)
-            self.reader.get_isosurface(500)
-            self.reader.render(self.ren)
+            self.ui.open_file_btn.setChecked(False)
+            self.ui.open_folder_btn.setChecked(True)
+
+            self.ui.vol_cbox.setCheckable(True)
+            self.ui.iso_cbox.setCheckable(True)
+            self.ui.plane_cbox.setCheckable(True)
+
+            # self.reader = MedicalObject()
+            # self.reader.read_dicom(folder_name)
+            # self.reader.get_isosurface(500)
+            # self.reader.render(self.ren)
 
             # Test
-            min, max = self.reader.get_value_range()
-            self.ui.test_spin.setMinimum(min)
-            self.ui.test_spin.setMaximum(max)
-            self.ui.test_spin.setSingleStep(50)
-            self.ui.test_spin.setValue(int(max - (max-min)*0.618))
+            # min, max = self.reader.get_value_range()
+            # self.ui.test_spin.setMinimum(min)
+            # self.ui.test_spin.setMaximum(max)
+            # self.ui.test_spin.setSingleStep(50)
+            # self.ui.test_spin.setValue(int(max - (max - min) * 0.618))
 
-            self.better_camera()
-            self.ren_win.Render()
+            # self.better_camera()
+            # self.ren_win.Render()
 
-    def on_open_metaimage(self):
+    def on_open_file(self):
 
         file_name = QtGui.QFileDialog.getOpenFileName(
             self, 'Open Meta Image', QtCore.QDir.currentPath(),
@@ -99,6 +118,8 @@ class Basic(QtGui.QMainWindow):
         file_name = str(file_name)
         # assert file_name, 'No file selected.'  # Debug
         logging.info('No file selected.')
+
+        self.path_name = file_name
 
         if file_name:  # if file_name is not an empty string
 
@@ -109,6 +130,22 @@ class Basic(QtGui.QMainWindow):
 
             self.better_camera()
             self.ren_win.Render()
+
+    def on_volume_cbox(self, state):
+
+        if self.path_name:
+            if state == QtCore.Qt.Checked:
+                self.reader = MedicalObject()
+                self.reader.read_dicom(self.path_name)
+                self.reader.get_volume()
+                self.reader.render(self.ren)
+
+                self.better_camera()
+                self.ren_win.Render()
+
+            else:
+                self.reader.clean(self.ren)
+                self.ren_win.Render()
 
     def better_camera(self):
 
@@ -121,22 +158,7 @@ class Basic(QtGui.QMainWindow):
 
     # TEST
     def on_test_btn(self):
-        # pass
-        folder_name = QtGui.QFileDialog.getExistingDirectory(
-            self, 'Open DICOM Folder', QtCore.QDir.currentPath(),
-            QtGui.QFileDialog.ShowDirsOnly)
-        folder_name = str(folder_name)  # QString --> Python String
-        logging.info('No folder selected.')
-
-        if folder_name:
-
-            self.reader = MedicalObject()
-            self.reader.read_dicom(folder_name)
-            self.reader.get_volume()
-            self.reader.render(self.ren)
-
-            self.better_camera()
-            self.ren_win.Render()
+        pass
 
     def on_test_spin(self):
 

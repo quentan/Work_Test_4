@@ -118,7 +118,7 @@ class MedicalObject(object):
         normals = vtk.vtkPolyDataNormals()
         stripper = vtk.vtkStripper()
         mapper = vtk.vtkPolyDataMapper()
-        self.actor_iso = vtk.vtkActor()
+        self.actor = vtk.vtkActor()
 
         contour.SetInputData(self.reader)
         contour.SetValue(0, iso_value)
@@ -133,13 +133,13 @@ class MedicalObject(object):
         mapper.SetInputConnection(stripper.GetOutputPort())
         mapper.SetScalarVisibility(False)
 
-        self.actor_iso.SetMapper(mapper)
+        self.actor.SetMapper(mapper)
 
         # Default colour, should be changed.
-        self.actor_iso.GetProperty().SetDiffuseColor(
+        self.actor.GetProperty().SetDiffuseColor(
             [247.0 / 255.0, 150.0 / 255.0, 155.0 / 255.0])  # Look like red
-        self.actor_iso.GetProperty().SetSpecular(0.3)
-        self.actor_iso.GetProperty().SetSpecularPower(20)
+        self.actor.GetProperty().SetSpecular(0.3)
+        self.actor.GetProperty().SetSpecularPower(20)
 
     def get_volume(self, color_file=None, volume_opacity=0.25):
         '''

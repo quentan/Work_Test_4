@@ -31,18 +31,46 @@ class Ui_MainWindow(object):
 
         self.central_widget = QtGui.QWidget(main_window)
         self.gridlayout = QtGui.QGridLayout(self.central_widget)
+        self.gridlayout.setSpacing(5)
 
         # Widgets
         self.vtk_widget = QVTKRenderWindowInteractor(self.central_widget)
         self.vtk_widget.setStatusTip('VTK Rendering Pane')
 
-        self.open_dicom_btn = QtGui.QPushButton('&Open DICOM folder')
-        self.open_meta_btn = QtGui.QPushButton('Open Meta Image')
+        # QGroupBox with 2 Buttons. For file/folder open
+        self.open_gbox = QtGui.QGroupBox('Open Image')
+        self.open_folder_btn = QtGui.QPushButton('Folder')
+        self.open_folder_btn.setCheckable(True)
+        self.open_file_btn = QtGui.QPushButton('File')
+        self.open_file_btn.setCheckable(True)
+        # hbox: Horizontal Box
+        self.open_hboxlayout = QtGui.QHBoxLayout(self.open_gbox)
+        self.open_hboxlayout.setSpacing(3)
+        self.open_hboxlayout.addWidget(self.open_folder_btn)
+        self.open_hboxlayout.addWidget(self.open_file_btn)
+
+        # QGroupBox with 3 QCheckBox. For rendering
+        self.render_gbox = QtGui.QGroupBox('Rendering')  # gbox: Group Box
+        self.vol_cbox = QtGui.QCheckBox('Volume')  # cbox: Check Box
+        self.iso_cbox = QtGui.QCheckBox('Isosurface')
+        self.plane_cbox = QtGui.QCheckBox('Planes')
+        # vbox: Vertical Box
+        self.render_vboxlayout = QtGui.QVBoxLayout(self.render_gbox)
+        self.render_vboxlayout.addWidget(self.vol_cbox)
+        self.render_vboxlayout.addWidget(self.iso_cbox)
+        self.render_vboxlayout.addWidget(self.plane_cbox)
+
+        self.isosurf_btn = QtGui.QPushButton('Isosurface')
+        self.volume_btn = QtGui.QPushButton('Volume Rendering')
 
         # Layout of widgets
         self.gridlayout.addWidget(self.vtk_widget, 2, 0, 10, 1)
-        self.gridlayout.addWidget(self.open_dicom_btn, 2, 1)
-        self.gridlayout.addWidget(self.open_meta_btn, 3, 1)
+        # self.gridlayout.addWidget(self.open_folder_btn, 2, 1)
+        # self.gridlayout.addWidget(self.open_file_btn, 3, 1)
+        self.gridlayout.addWidget(self.open_gbox, 2, 1)
+        # self.gridlayout.addWidget(self.isosurf_btn, 4, 1)
+        # self.gridlayout.addWidget(self.volume_btn, 5, 1)
+        self.gridlayout.addWidget(self.render_gbox, 3, 1)
 
         # TEST
         self.test_btn = QtGui.QPushButton('Test Button')
