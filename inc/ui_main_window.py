@@ -45,7 +45,7 @@ class Ui_MainWindow(object):
         self.gridlayout.addWidget(self.open_meta_btn, 3, 1)
 
         # TEST
-        self.test_btn = QtGui.QPushButton('Test Image Loading')
+        self.test_btn = QtGui.QPushButton('Test Button')
         self.gridlayout.addWidget(self.test_btn, 10, 1)
         self.test_spin = QtGui.QSpinBox()
         self.gridlayout.addWidget(self.test_spin, 11, 1)

@@ -12,9 +12,9 @@ logging.basicConfig(level=logging.INFO)
 from PyQt4 import QtGui
 from PyQt4 import QtCore
 
-from lib import ui_main_window
-from lib.medical_object import MedicalObject
-from lib.annotation_cube import Marker
+from inc import ui_main_window
+from inc.medical_object import MedicalObject
+from inc.annotation_cube import Marker
 
 
 class Basic(QtGui.QMainWindow):
@@ -121,7 +121,22 @@ class Basic(QtGui.QMainWindow):
 
     # TEST
     def on_test_btn(self):
-        pass
+        # pass
+        folder_name = QtGui.QFileDialog.getExistingDirectory(
+            self, 'Open DICOM Folder', QtCore.QDir.currentPath(),
+            QtGui.QFileDialog.ShowDirsOnly)
+        folder_name = str(folder_name)  # QString --> Python String
+        logging.info('No folder selected.')
+
+        if folder_name:
+
+            self.reader = MedicalObject()
+            self.reader.read_dicom(folder_name)
+            self.reader.get_volume()
+            self.reader.render(self.ren)
+
+            self.better_camera()
+            self.ren_win.Render()
 
     def on_test_spin(self):
 
