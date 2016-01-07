@@ -10,6 +10,8 @@ import SimpleITK as sitk
 
 from vtk.util import numpy_support
 
+import const
+
 
 class MedicalObject(object):
 
@@ -25,7 +27,26 @@ class MedicalObject(object):
         self.origin = self.reader.GetOrigin()
         self.value_range = self.reader.GetScalarRange()
 
+        self.image_type = None
         self.flag_read = False
+
+    def read(self, path):
+        '''
+        General image reading function
+        '''
+        pass
+        if self.image_type == None:
+
+            sys.stderr.write('No file type given!')
+            return
+
+        elif self.image_type == const.DICOM:
+
+             self.read_dicom(path)
+
+        elif self.image_type == const.META:
+
+             self.read_metaimage(path)
 
     def read_dicom(self, path_dicom, cast_type=11):
 

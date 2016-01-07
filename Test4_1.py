@@ -15,7 +15,7 @@ from PyQt4 import QtCore
 from inc import ui_main_window
 from inc.medical_object import MedicalObject
 from inc.annotation_cube import Marker
-
+from inc import const
 
 class Basic(QtGui.QMainWindow):
 
@@ -49,15 +49,17 @@ class Basic(QtGui.QMainWindow):
         self.iren.Initialize()
 
         self.ui.open_folder_btn.clicked[bool].connect(self.on_open_folder)
-        self.ui.open_file_btn.clicked.connect(self.on_open_file)
+        self.ui.open_file_btn.clicked[bool].connect(self.on_open_file)
         self.ui.test_btn.clicked.connect(self.on_test_btn)
         # self.ui.volume_btn.clicked.connect(self.on_volume_btn)
         self.ui.vol_cbox.stateChanged.connect(self.on_volume_cbox)
+        self.ui.iso_cbox.stateChanged.connect(self.on_iso_cbox)
 
         self.marker = Marker(self.iren)  # Annotation Cube
         self.marker.show()
         # self.ui.annotationChk.toggle()
 
+        self.reader = MedicalObject()
         self.path_name = None
         self.ui.vol_cbox.setCheckable(False)
         self.ui.iso_cbox.setCheckable(False)
@@ -74,7 +76,7 @@ class Basic(QtGui.QMainWindow):
     # Event Response Function
     def on_open_folder(self):
 
-        if self.ui.open_file_btn.isChecked():
+        if self.ui.open_file_btn.isChecked():  # Not working
             return
 
         folder_name = QtGui.QFileDialog.getExistingDirectory(
@@ -83,9 +85,10 @@ class Basic(QtGui.QMainWindow):
         folder_name = str(folder_name)  # QString --> Python String
         logging.info('No folder selected.')
 
-        self.path_name = folder_name
-
         if folder_name:
+
+            self.path_name = folder_name
+            self.reader.image_type = const.DICOM
 
             self.ui.open_file_btn.setChecked(False)
             self.ui.open_folder_btn.setChecked(True)
@@ -94,10 +97,9 @@ class Basic(QtGui.QMainWindow):
             self.ui.iso_cbox.setCheckable(True)
             self.ui.plane_cbox.setCheckable(True)
 
-            # self.reader = MedicalObject()
-            # self.reader.read_dicom(folder_name)
-            # self.reader.get_isosurface(500)
-            # self.reader.render(self.ren)
+            self.ui.vol_cbox.setChecked(False)
+            self.ui.iso_cbox.setChecked(False)
+            self.ui.plane_cbox.setChecked(False)
 
             # Test
             # min, max = self.reader.get_value_range()
@@ -119,25 +121,44 @@ class Basic(QtGui.QMainWindow):
         # assert file_name, 'No file selected.'  # Debug
         logging.info('No file selected.')
 
-        self.path_name = file_name
-
         if file_name:  # if file_name is not an empty string
 
-            reader = MedicalObject()
-            reader.read_metaimage(file_name)
-            reader.get_isosurface(500)
-            reader.render(self.ren)
+            self.path_name = file_name
+            self.reader.image_type = const.META
 
-            self.better_camera()
-            self.ren_win.Render()
+            self.ui.open_file_btn.setChecked(True)
+            self.ui.open_folder_btn.setChecked(False)
+
+            self.ui.vol_cbox.setCheckable(True)
+            self.ui.iso_cbox.setCheckable(True)
+            self.ui.plane_cbox.setCheckable(True)
+
+            self.ui.vol_cbox.setChecked(False)
+            self.ui.iso_cbox.setChecked(False)
+            self.ui.plane_cbox.setChecked(False)
+
 
     def on_volume_cbox(self, state):
 
         if self.path_name:
             if state == QtCore.Qt.Checked:
-                self.reader = MedicalObject()
-                self.reader.read_dicom(self.path_name)
+                self.reader.read(self.path_name)
                 self.reader.get_volume()
+                self.reader.render(self.ren)
+
+                self.better_camera()
+                self.ren_win.Render()
+
+            else:
+                self.reader.clean(self.ren)
+                self.ren_win.Render()
+
+    def on_iso_cbox(self, state):
+
+        if self.path_name:
+            if state == QtCore.Qt.Checked:
+                self.reader.read(self.path_name)
+                self.reader.get_isosurface(500)
                 self.reader.render(self.ren)
 
                 self.better_camera()
