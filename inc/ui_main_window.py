@@ -39,15 +39,15 @@ class Ui_MainWindow(object):
 
         # QGroupBox with 2 Buttons. For file/folder open
         self.open_gbox = QtGui.QGroupBox('Open Image')
-        self.open_folder_btn = QtGui.QPushButton('Folder')
-        self.open_folder_btn.setCheckable(True)
-        self.open_file_btn = QtGui.QPushButton('File')
-        self.open_file_btn.setCheckable(True)
+        self.open_folder_radio = QtGui.QRadioButton('Folder')
+        self.open_folder_radio.setCheckable(True)
+        self.open_file_radio = QtGui.QRadioButton('File')
+        self.open_file_radio.setCheckable(True)
         # hbox: Horizontal Box
         self.open_hboxlayout = QtGui.QHBoxLayout(self.open_gbox)
         self.open_hboxlayout.setSpacing(3)
-        self.open_hboxlayout.addWidget(self.open_folder_btn)
-        self.open_hboxlayout.addWidget(self.open_file_btn)
+        self.open_hboxlayout.addWidget(self.open_folder_radio)
+        self.open_hboxlayout.addWidget(self.open_file_radio)
 
         # QGroupBox with 3 QCheckBox. For rendering
         self.render_gbox = QtGui.QGroupBox('Rendering')  # gbox: Group Box

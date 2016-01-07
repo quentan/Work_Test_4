@@ -48,8 +48,8 @@ class Basic(QtGui.QMainWindow):
         self.iren = self.ren_win.GetInteractor()
         self.iren.Initialize()
 
-        self.ui.open_folder_btn.clicked[bool].connect(self.on_open_folder)
-        self.ui.open_file_btn.clicked[bool].connect(self.on_open_file)
+        self.ui.open_folder_radio.clicked[bool].connect(self.on_open_folder)
+        self.ui.open_file_radio.clicked[bool].connect(self.on_open_file)
         self.ui.test_btn.clicked.connect(self.on_test_btn)
         # self.ui.volume_btn.clicked.connect(self.on_volume_btn)
         self.ui.vol_cbox.stateChanged.connect(self.on_volume_cbox)
@@ -76,8 +76,8 @@ class Basic(QtGui.QMainWindow):
     # Event Response Function
     def on_open_folder(self):
 
-        if self.ui.open_file_btn.isChecked():  # Not working
-            return
+        # if self.ui.open_file_radio.isChecked():  # Not working
+        #     return
 
         folder_name = QtGui.QFileDialog.getExistingDirectory(
             self, 'Open DICOM Folder', QtCore.QDir.currentPath(),
@@ -90,8 +90,8 @@ class Basic(QtGui.QMainWindow):
             self.path_name = folder_name
             self.reader.image_type = const.DICOM
 
-            self.ui.open_file_btn.setChecked(False)
-            self.ui.open_folder_btn.setChecked(True)
+            # self.ui.open_file_radio.setChecked(False)
+            # self.ui.open_folder_radio.setChecked(True)
 
             self.ui.vol_cbox.setCheckable(True)
             self.ui.iso_cbox.setCheckable(True)
@@ -126,8 +126,8 @@ class Basic(QtGui.QMainWindow):
             self.path_name = file_name
             self.reader.image_type = const.META
 
-            self.ui.open_file_btn.setChecked(True)
-            self.ui.open_folder_btn.setChecked(False)
+            # self.ui.open_file_radio.setChecked(True)
+            # self.ui.open_folder_radio.setChecked(False)
 
             self.ui.vol_cbox.setCheckable(True)
             self.ui.iso_cbox.setCheckable(True)
