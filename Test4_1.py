@@ -89,6 +89,7 @@ class Basic(QtGui.QMainWindow):
 
             self.path_name = folder_name
             self.reader.image_type = const.DICOM
+            self.reader.read(self.path_name)  # Don't forget to set the image_type!
 
             # self.ui.open_file_radio.setChecked(False)
             # self.ui.open_folder_radio.setChecked(True)
@@ -125,6 +126,7 @@ class Basic(QtGui.QMainWindow):
 
             self.path_name = file_name
             self.reader.image_type = const.META
+            self.reader.read(self.path_name)
 
             # self.ui.open_file_radio.setChecked(True)
             # self.ui.open_folder_radio.setChecked(False)
@@ -141,27 +143,31 @@ class Basic(QtGui.QMainWindow):
     def on_volume_cbox(self, state):
 
         if self.path_name:
+
+            # self.reader.read(self.path_name)
             if state == QtCore.Qt.Checked:
-                self.reader.read(self.path_name)
-                self.reader.get_volume()
+                actor = self.reader.get_volume()
                 self.reader.render(self.ren)
 
-                self.better_camera()
+                # self.better_camera()
+                self.ren.ResetCamera()
                 self.ren_win.Render()
 
             else:
                 self.reader.clean(self.ren)
+                # self.ren.RemoveVolume(actor)
                 self.ren_win.Render()
 
     def on_iso_cbox(self, state):
 
         if self.path_name:
             if state == QtCore.Qt.Checked:
-                self.reader.read(self.path_name)
-                self.reader.get_isosurface(500)
+                # self.reader.read(self.path_name)
+                actor = self.reader.get_isosurface(500)
                 self.reader.render(self.ren)
 
-                self.better_camera()
+                # self.better_camera()
+                self.ren.ResetCamera()
                 self.ren_win.Render()
 
             else:

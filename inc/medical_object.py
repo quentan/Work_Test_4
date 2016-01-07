@@ -34,7 +34,6 @@ class MedicalObject(object):
         '''
         General image reading function
         '''
-        pass
         if self.image_type == None:
 
             sys.stderr.write('No file type given!')
@@ -132,7 +131,7 @@ class MedicalObject(object):
 
         if not self.flag_read:
 
-            sys.stderr.write('No Image Loaded.')
+            sys.stderr.write('No Image Loaded!\nCheck whether image_type has been set.')
             return
 
         contour = vtk.vtkContourFilter()
@@ -162,10 +161,18 @@ class MedicalObject(object):
         self.actor.GetProperty().SetSpecular(0.3)
         self.actor.GetProperty().SetSpecularPower(20)
 
+        return self.actor
+
     def get_volume(self, color_file=None, volume_opacity=0.25):
         '''
         Default Volume Rendering
+        Return vtkActor. For volume rendering it is vtkVolume
         '''
+        if not self.flag_read:
+
+            sys.stderr.write('No Image Loaded.')
+            return
+
         transfer_func = self.get_transfer_functioin(color_file, volume_opacity)
         prop_volume = vtk.vtkVolumeProperty()
         prop_volume.ShadeOff()
@@ -186,6 +193,8 @@ class MedicalObject(object):
         self.actor.SetMapper(mapper)
 
         self.actor.SetProperty(prop_volume)
+
+        return self.actor
 
     def render(self, renderer):
 
