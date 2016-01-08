@@ -15,7 +15,7 @@ from PyQt4 import QtCore
 from inc import ui_main_window
 from inc.medical_object import MedicalObject
 from inc.annotation_cube import Marker
-from inc import const
+
 
 class Basic(QtGui.QMainWindow):
 
@@ -76,9 +76,6 @@ class Basic(QtGui.QMainWindow):
     # Event Response Function
     def on_open_folder(self):
 
-        # if self.ui.open_file_radio.isChecked():  # Not working
-        #     return
-
         folder_name = QtGui.QFileDialog.getExistingDirectory(
             self, 'Open DICOM Folder', QtCore.QDir.currentPath(),
             QtGui.QFileDialog.ShowDirsOnly)
@@ -88,11 +85,7 @@ class Basic(QtGui.QMainWindow):
         if folder_name:
 
             self.path_name = folder_name
-            self.reader.image_type = const.DICOM
-            self.reader.read(self.path_name)  # Don't forget to set the image_type!
-
-            # self.ui.open_file_radio.setChecked(False)
-            # self.ui.open_folder_radio.setChecked(True)
+            self.reader.read(self.path_name)
 
             self.ui.vol_cbox.setCheckable(True)
             self.ui.iso_cbox.setCheckable(True)
@@ -125,11 +118,7 @@ class Basic(QtGui.QMainWindow):
         if file_name:  # if file_name is not an empty string
 
             self.path_name = file_name
-            self.reader.image_type = const.META
             self.reader.read(self.path_name)
-
-            # self.ui.open_file_radio.setChecked(True)
-            # self.ui.open_folder_radio.setChecked(False)
 
             self.ui.vol_cbox.setCheckable(True)
             self.ui.iso_cbox.setCheckable(True)
@@ -139,39 +128,41 @@ class Basic(QtGui.QMainWindow):
             self.ui.iso_cbox.setChecked(False)
             self.ui.plane_cbox.setChecked(False)
 
-
     def on_volume_cbox(self, state):
 
         if self.path_name:
 
-            # self.reader.read(self.path_name)
+            actor = self.reader.get_volume()
+
             if state == QtCore.Qt.Checked:
-                actor = self.reader.get_volume()
-                self.reader.render(self.ren)
+
+                self.reader.add_actor(self.ren, actor)
 
                 # self.better_camera()
                 self.ren.ResetCamera()
                 self.ren_win.Render()
 
             else:
-                self.reader.clean(self.ren)
-                # self.ren.RemoveVolume(actor)
+
+                self.reader.remove_actor(self.ren, actor)
+                self.ren.ResetCamera()
                 self.ren_win.Render()
 
     def on_iso_cbox(self, state):
 
         if self.path_name:
+            actor = self.reader.get_isosurface(500)
+
             if state == QtCore.Qt.Checked:
-                # self.reader.read(self.path_name)
-                actor = self.reader.get_isosurface(500)
-                self.reader.render(self.ren)
+                self.reader.add_actor(self.ren, actor)
 
                 # self.better_camera()
                 self.ren.ResetCamera()
                 self.ren_win.Render()
 
             else:
-                self.reader.clean(self.ren)
+                self.reader.remove_actor(self.ren, actor)
+                self.ren.ResetCamera()
                 self.ren_win.Render()
 
     def better_camera(self):

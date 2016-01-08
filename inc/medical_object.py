@@ -7,18 +7,19 @@ Basic superclass
 import sys
 import vtk
 import SimpleITK as sitk
+import os.path
 
 from vtk.util import numpy_support
 
-import const
+# import const
 
 
 class MedicalObject(object):
 
     def __init__(self):
-        '''
+        """
         Basic elements for Medical Object rendering
-        '''
+        """
         self.reader = vtk.vtkImageData()
 
         self.dims = self.reader.GetDimensions()
@@ -27,25 +28,43 @@ class MedicalObject(object):
         self.origin = self.reader.GetOrigin()
         self.value_range = self.reader.GetScalarRange()
 
+        # Actors
+        self.iso_actor = vtk.vtk.vtkActor()
+        self.vol_actor = vtk.vtkVolume()
+
         self.image_type = None
         self.flag_read = False
 
     def read(self, path):
-        '''
+        """
         General image reading function
-        '''
-        if self.image_type == None:
-
-            sys.stderr.write('No file type given!')
+        """
+        if not os.path.exists(path):
+            sys.stderr.write('Folder or file nonexist!\nCheck the path!')
             return
 
-        elif self.image_type == const.DICOM:
+        else:
+            if os.path.isdir(path):  # It should be DICOM folder
+                self.read_dicom(path)
 
-             self.read_dicom(path)
+            else:
+                # Get extension with dot, such as '.mha'
+                ext = os.path.splitext(path)[1].lower()
+                if '.mha' == ext or '.mhd' == ext:
+                    self.read_metaimage(path)
 
-        elif self.image_type == const.META:
+        # if self.image_type is None:
 
-             self.read_metaimage(path)
+        #     sys.stderr.write('No file type given!')
+        #     return
+
+        # elif self.image_type == const.DICOM:
+
+        #     self.read_dicom(path)
+
+        # elif self.image_type == const.META:
+
+        #     self.read_metaimage(path)
 
     def read_dicom(self, path_dicom, cast_type=11):
 
@@ -130,15 +149,13 @@ class MedicalObject(object):
     def get_isosurface(self, iso_value=500):
 
         if not self.flag_read:
-
-            sys.stderr.write('No Image Loaded!\nCheck whether image_type has been set.')
+            sys.stderr.write('No Image Loaded!\n')
             return
 
         contour = vtk.vtkContourFilter()
         normals = vtk.vtkPolyDataNormals()
         stripper = vtk.vtkStripper()
         mapper = vtk.vtkPolyDataMapper()
-        self.actor = vtk.vtkActor()
 
         contour.SetInputData(self.reader)
         contour.SetValue(0, iso_value)
@@ -153,23 +170,22 @@ class MedicalObject(object):
         mapper.SetInputConnection(stripper.GetOutputPort())
         mapper.SetScalarVisibility(False)
 
-        self.actor.SetMapper(mapper)
+        self.iso_actor.SetMapper(mapper)
 
         # Default colour, should be changed.
-        self.actor.GetProperty().SetDiffuseColor(
+        self.iso_actor.GetProperty().SetDiffuseColor(
             [247.0 / 255.0, 150.0 / 255.0, 155.0 / 255.0])  # Look like red
-        self.actor.GetProperty().SetSpecular(0.3)
-        self.actor.GetProperty().SetSpecularPower(20)
+        self.iso_actor.GetProperty().SetSpecular(0.3)
+        self.iso_actor.GetProperty().SetSpecularPower(20)
 
-        return self.actor
+        return self.iso_actor
 
     def get_volume(self, color_file=None, volume_opacity=0.25):
-        '''
+        """
         Default Volume Rendering
         Return vtkActor. For volume rendering it is vtkVolume
-        '''
+        """
         if not self.flag_read:
-
             sys.stderr.write('No Image Loaded.')
             return
 
@@ -189,31 +205,30 @@ class MedicalObject(object):
         # mapper = vtk.vtkGPUVolumeRayCastMapper()
         mapper.SetInputData(self.reader)
 
-        self.actor = vtk.vtkVolume()
-        self.actor.SetMapper(mapper)
+        self.vol_actor.SetMapper(mapper)
 
-        self.actor.SetProperty(prop_volume)
+        self.vol_actor.SetProperty(prop_volume)
 
-        return self.actor
+        return self.vol_actor
 
-    def render(self, renderer):
+    def add_actor(self, renderer, actor):
 
-        renderer.AddActor(self.actor)
+        renderer.AddActor(actor)
 
-    def clean(self, renderer):
+    def remove_actor(self, renderer, actor):
 
-        renderer.RemoveActor(self.actor)
+        renderer.RemoveActor(actor)
 
     def get_value_range(self):
 
         return self.reader.GetScalarRange()
 
     def get_transfer_functioin(self, color_file=None, volume_opacity=0.25):
-        '''
+        """
         It is for volume rendering.
         Calculate transfer function from color file.
         Generate default transfer functions if no color file given.
-        '''
+        """
         if color_file:  # Color file is given
 
             import csv
@@ -255,16 +270,16 @@ class MedicalObject(object):
 
             # min, max = self.get_value_range()
             color_transfor = vtk.vtkColorTransferFunction()
-            color_transfor.AddRGBPoint(0,    0.0, 0.0, 0.0)
-            color_transfor.AddRGBPoint(500,  1.0, 0.5, 0.3)
+            color_transfor.AddRGBPoint(0, 0.0, 0.0, 0.0)
+            color_transfor.AddRGBPoint(500, 1.0, 0.5, 0.3)
             color_transfor.AddRGBPoint(1000, 1.0, 0.5, 0.3)
             color_transfor.AddRGBPoint(1150, 1.0, 1.0, 0.9)
 
             # The opacity transfer function is used to control the opacity
             # of different tissue types.
             opacity_scalar = vtk.vtkPiecewiseFunction()
-            opacity_scalar.AddPoint(0,    0.00)
-            opacity_scalar.AddPoint(500,  0.15)
+            opacity_scalar.AddPoint(0, 0.00)
+            opacity_scalar.AddPoint(500, 0.15)
             opacity_scalar.AddPoint(1000, 0.15)
             opacity_scalar.AddPoint(1150, 0.85)
 
@@ -274,8 +289,8 @@ class MedicalObject(object):
             # as the amount by which the intensity changes over unit distance.
             # For most medical data, the unit distance is 1mm.
             opacity_gradient = vtk.vtkPiecewiseFunction()
-            opacity_gradient.AddPoint(0,   0.0)
-            opacity_gradient.AddPoint(90,  0.5)
+            opacity_gradient.AddPoint(0, 0.0)
+            opacity_gradient.AddPoint(90, 0.5)
             opacity_gradient.AddPoint(100, 1.0)
 
             return color_transfor, opacity_scalar, opacity_gradient
