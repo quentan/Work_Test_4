@@ -33,6 +33,13 @@ class Basic(QtGui.QMainWindow):
 
         super(Basic, self).__init__()
 
+        self.reader = MedicalObject()
+        self.path_name = None
+
+        self.actor_iso = None
+        self.actor_vol = None
+        self.plane_widget = None
+
         self.init_ui()
 
     def init_ui(self):
@@ -133,36 +140,40 @@ class Basic(QtGui.QMainWindow):
 
         if self.path_name:
 
-            actor = self.reader.get_volume()
+            if self.actor_vol is None:
+                self.actor_vol = self.reader.get_volume()
+                self.reader.add_actor(self.ren, self.actor_vol)
 
             if state == QtCore.Qt.Checked:
 
-                self.reader.add_actor(self.ren, actor)
-
                 # self.better_camera()
+                self.actor_vol.VisibilityOn()
                 self.ren.ResetCamera()
                 self.ren_win.Render()
 
             else:
 
-                self.reader.remove_actor(self.ren, actor)
+                self.actor_vol.VisibilityOff()
                 self.ren.ResetCamera()
                 self.ren_win.Render()
 
     def on_iso_cbox(self, state):
 
         if self.path_name:
-            actor = self.reader.get_isosurface(500)
+
+            if self.actor_iso is None:
+                self.actor_iso = self.reader.get_isosurface(500)
+                self.reader.add_actor(self.ren, self.actor_iso)
 
             if state == QtCore.Qt.Checked:
-                self.reader.add_actor(self.ren, actor)
-
+                self.actor_iso.VisibilityOn()
                 # self.better_camera()
                 self.ren.ResetCamera()
                 self.ren_win.Render()
 
             else:
-                self.reader.remove_actor(self.ren, actor)
+                # self.reader.remove_actor(self.ren, actor)
+                self.actor_iso.VisibilityOff()
                 self.ren.ResetCamera()
                 self.ren_win.Render()
 
@@ -174,20 +185,25 @@ class Basic(QtGui.QMainWindow):
             plane_y.SetInteractor(self.iren)
             plane_z.SetInteractor(self.iren)
 
+            if self.plane_widget is None:
+                self.plane_widget = plane_z
+
             if state == QtCore.Qt.Checked:
 
-                plane_x.On()
-                # plane_x.SetEnabled(True)
+                # plane_x.On()
+                plane_x.SetEnabled(True)
                 plane_y.On()
-                plane_z.On()
+                # plane_z.On()
+                self.plane_widget.On()
 
             else:
                 logging.info('Plane CheckBox is unchecked!')
 
-                plane_x.Off()
-                # plane_x.SetEnabled(False)
+                # plane_x.Off()
+                plane_x.SetEnabled(False)
                 plane_y.Off()
-                plane_z.Off()
+                # plane_z.Off()
+                self.plane_widget.Off()
 
             self.ren_win.Render()
 

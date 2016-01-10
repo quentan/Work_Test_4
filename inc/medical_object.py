@@ -11,6 +11,7 @@ import os.path
 
 from vtk.util import numpy_support
 
+
 class MedicalObject(object):
 
     def __init__(self):
@@ -27,15 +28,12 @@ class MedicalObject(object):
 
         # Actors
         self.iso_actor = vtk.vtk.vtkActor()
-        self.vol_actor = vtk.vtkVolume()
+        # self.vol_actor = vtk.vtkVolume()
 
         self.plane_widget_x = vtk.vtkImagePlaneWidget()
         self.plane_widget_y = vtk.vtkImagePlaneWidget()
         self.plane_widget_z = vtk.vtkImagePlaneWidget()
 
-        # self.plane_widget = vtk.vtkImagePlaneWidget()
-
-        # self.image_type = None
         self.flag_read = False
 
     def read(self, path):
@@ -179,6 +177,9 @@ class MedicalObject(object):
             sys.stderr.write('No Image Loaded.')
             return
 
+        # TEST
+        print self.is_blank_image()
+
         transfer_func = self.get_transfer_functioin(color_file, volume_opacity)
         prop_volume = vtk.vtkVolumeProperty()
         prop_volume.ShadeOff()
@@ -195,11 +196,12 @@ class MedicalObject(object):
         # mapper = vtk.vtkGPUVolumeRayCastMapper()
         mapper.SetInputData(self.reader)
 
-        self.vol_actor.SetMapper(mapper)
+        actor = vtk.vtkVolume()
+        actor.SetMapper(mapper)
 
-        self.vol_actor.SetProperty(prop_volume)
+        actor.SetProperty(prop_volume)
 
-        return self.vol_actor
+        return actor
 
     def generate_plane(self, axis=0, slice_idx=10, color=[1, 0, 0], key='i'):
         """
@@ -261,6 +263,14 @@ class MedicalObject(object):
     def get_value_range(self):
 
         return self.reader.GetScalarRange()
+
+    def show_actor(self, actor):
+
+        actor.VisibilityOn()
+
+    def hide_actor(self, actor):
+
+        actor.VisibilityOff()
 
     def get_transfer_functioin(self, color_file=None, volume_opacity=0.25):
         """
@@ -333,3 +343,16 @@ class MedicalObject(object):
             opacity_gradient.AddPoint(100, 1.0)
 
             return color_transfor, opacity_scalar, opacity_gradient
+
+    def is_blank_image(self):
+
+        image = self.reader
+        image.Modified()
+        image.GetPointData().GetScalars().Modified()
+        range = image.GetScalarRange()
+
+        if range[0] == 0 and range[1] == 0:
+            return True
+
+        else:
+            return False
