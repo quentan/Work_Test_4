@@ -7,7 +7,7 @@
 import sys
 import vtk
 import logging
-# logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
 
 from PyQt4 import QtGui
 from PyQt4 import QtCore
@@ -54,6 +54,7 @@ class Basic(QtGui.QMainWindow):
         # self.ui.volume_btn.clicked.connect(self.on_volume_btn)
         self.ui.vol_cbox.stateChanged.connect(self.on_volume_cbox)
         self.ui.iso_cbox.stateChanged.connect(self.on_iso_cbox)
+        self.ui.plane_cbox.stateChanged.connect(self.on_plane_cbox)
 
         self.marker = Marker(self.iren)  # Annotation Cube
         self.marker.show()
@@ -164,6 +165,31 @@ class Basic(QtGui.QMainWindow):
                 self.reader.remove_actor(self.ren, actor)
                 self.ren.ResetCamera()
                 self.ren_win.Render()
+
+    def on_plane_cbox(self, state):
+
+        if self.path_name:
+            plane_x, plane_y, plane_z = self.reader.get_planes()
+            plane_x.SetInteractor(self.iren)
+            plane_y.SetInteractor(self.iren)
+            plane_z.SetInteractor(self.iren)
+
+            if state == QtCore.Qt.Checked:
+
+                plane_x.On()
+                # plane_x.SetEnabled(True)
+                plane_y.On()
+                plane_z.On()
+
+            else:
+                logging.info('Plane CheckBox is unchecked!')
+
+                plane_x.Off()
+                # plane_x.SetEnabled(False)
+                plane_y.Off()
+                plane_z.Off()
+
+            self.ren_win.Render()
 
     def better_camera(self):
 

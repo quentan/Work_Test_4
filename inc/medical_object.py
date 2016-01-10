@@ -11,9 +11,6 @@ import os.path
 
 from vtk.util import numpy_support
 
-# import const
-
-
 class MedicalObject(object):
 
     def __init__(self):
@@ -32,7 +29,13 @@ class MedicalObject(object):
         self.iso_actor = vtk.vtk.vtkActor()
         self.vol_actor = vtk.vtkVolume()
 
-        self.image_type = None
+        self.plane_widget_x = vtk.vtkImagePlaneWidget()
+        self.plane_widget_y = vtk.vtkImagePlaneWidget()
+        self.plane_widget_z = vtk.vtkImagePlaneWidget()
+
+        # self.plane_widget = vtk.vtkImagePlaneWidget()
+
+        # self.image_type = None
         self.flag_read = False
 
     def read(self, path):
@@ -52,19 +55,6 @@ class MedicalObject(object):
                 ext = os.path.splitext(path)[1].lower()
                 if '.mha' == ext or '.mhd' == ext:
                     self.read_metaimage(path)
-
-        # if self.image_type is None:
-
-        #     sys.stderr.write('No file type given!')
-        #     return
-
-        # elif self.image_type == const.DICOM:
-
-        #     self.read_dicom(path)
-
-        # elif self.image_type == const.META:
-
-        #     self.read_metaimage(path)
 
     def read_dicom(self, path_dicom, cast_type=11):
 
@@ -210,6 +200,55 @@ class MedicalObject(object):
         self.vol_actor.SetProperty(prop_volume)
 
         return self.vol_actor
+
+    def generate_plane(self, axis=0, slice_idx=10, color=[1, 0, 0], key='i'):
+        """
+        Inner function for ONE plane widget
+        """
+
+        plane = vtk.vtkImagePlaneWidget()
+        plane.DisplayTextOn()
+        plane.SetInputData(self.reader)
+        plane.SetPlaneOrientation(axis)
+        plane.SetSliceIndex(slice_idx)
+        # 0: neares, 1: liner, 2: cubic
+        plane.SetResliceInterpolate(2)
+
+        picker = vtk.vtkCellPicker()
+        picker.SetTolerance(0.005)
+
+        plane.SetPicker(picker)
+        plane.SetKeyPressActivationValue(key)
+        plane.GetPlaneProperty().SetColor(color)
+
+        return plane
+
+    def get_planes(self):
+        """
+        Get 3 plane widgets and reture
+        """
+        if not self.flag_read:
+            sys.stderr.write('No Image Loaded.')
+            return
+
+        dims = self.reader.GetDimensions()
+
+        self.plane_widget_x = self.generate_plane(
+            axis=0, slice_idx=dims[0] / 2, color=[1, 0, 0], key='x')
+        self.plane_widget_y = self.generate_plane(
+            axis=1, slice_idx=dims[1] / 2, color=[1, 1, 0], key='y')
+        plane_widget_z = self.generate_plane(
+            axis=2, slice_idx=dims[2] / 2, color=[0, 0, 1], key='z')
+
+        return self.plane_widget_x, self.plane_widget_y, plane_widget_z
+
+    def show_planes(self, renderer, state=True):
+
+        self.plane_widget_x.SetEnabled(state)
+
+        if state:
+            if renderer.HasViewPro(self.plane_widget_x.PlaneOutlineActor):
+                renderer.RemoveViewProp(self.plane_widget_x.PlaneOutlineActor)
 
     def add_actor(self, renderer, actor):
 
