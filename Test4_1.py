@@ -33,7 +33,8 @@ class Basic(QtGui.QMainWindow):
 
         super(Basic, self).__init__()
 
-        self.reader = MedicalObject()
+        # self.reader = MedicalObject()
+        self.reader = None
         self.path_name = None
 
         self.actor_iso = None
@@ -67,8 +68,6 @@ class Basic(QtGui.QMainWindow):
         self.marker.show()
         # self.ui.annotationChk.toggle()
 
-        self.reader = MedicalObject()
-        self.path_name = None
         self.ui.vol_cbox.setCheckable(False)
         self.ui.iso_cbox.setCheckable(False)
         self.ui.plane_cbox.setCheckable(False)
@@ -88,20 +87,37 @@ class Basic(QtGui.QMainWindow):
             self, 'Open DICOM Folder', QtCore.QDir.currentPath(),
             QtGui.QFileDialog.ShowDirsOnly)
         folder_name = str(folder_name)  # QString --> Python String
-        logging.info('No folder selected.')
+        # logging.info('No folder selected.')
+        try:
+            not folder_name
+        except IOError, e:
+            print IOError, e
 
-        if folder_name:
-
+        # For the first time file reading
+        if not self.path_name and folder_name:
             self.path_name = folder_name
-            self.reader.read(self.path_name)
 
-            self.ui.vol_cbox.setCheckable(True)
-            self.ui.iso_cbox.setCheckable(True)
-            self.ui.plane_cbox.setCheckable(True)
+        # After the first file reading
+        elif self.is_path_changed(folder_name) and folder_name:
 
-            self.ui.vol_cbox.setChecked(False)
-            self.ui.iso_cbox.setChecked(False)
-            self.ui.plane_cbox.setChecked(False)
+            if hasattr(self.reader, 'vol_actor'):
+                self.ren.RemoveActor(self.reader.vol_actor)
+
+            if self.reader:  # If there was a reader, delete it
+                del self.reader
+
+        self.path_name = folder_name
+
+        self.reader = MedicalObject()
+        self.reader.read(self.path_name)
+
+        self.ui.vol_cbox.setCheckable(True)
+        self.ui.iso_cbox.setCheckable(True)
+        self.ui.plane_cbox.setCheckable(True)
+
+        self.ui.vol_cbox.setChecked(False)
+        self.ui.iso_cbox.setChecked(False)
+        self.ui.plane_cbox.setChecked(False)
 
             # Test
             # min, max = self.reader.get_value_range()
@@ -138,24 +154,41 @@ class Basic(QtGui.QMainWindow):
 
     def on_volume_cbox(self, state):
 
-        if self.path_name:
+        if self.reader is not None:
+            logging.info('"self.reader" exists.')
 
-            if self.actor_vol is None:
-                self.actor_vol = self.reader.get_volume()
-                self.reader.add_actor(self.ren, self.actor_vol)
+            if not hasattr(self.reader, 'vol_actor'):
+                setattr(self.reader, 'vol_actor', None)
+                self.reader.vol_actor = self.reader.get_volume()
+                self.reader.add_actor(self.ren, self.reader.vol_actor)
 
             if state == QtCore.Qt.Checked:
-
-                # self.better_camera()
-                self.actor_vol.VisibilityOn()
-                self.ren.ResetCamera()
-                self.ren_win.Render()
+                self.reader.vol_actor.VisibilityOn()
 
             else:
+                self.reader.vol_actor.VisibilityOff()
 
-                self.actor_vol.VisibilityOff()
-                self.ren.ResetCamera()
-                self.ren_win.Render()
+            self.ren.ResetCamera()
+            self.ren_win.Render()
+
+        # if self.path_name:
+
+        #     if self.actor_vol is None:
+        #         self.actor_vol = self.reader.get_volume()
+        #         self.reader.add_actor(self.ren, self.actor_vol)
+
+        #     if state == QtCore.Qt.Checked:
+
+        # self.better_camera()
+        #         self.actor_vol.VisibilityOn()
+        #         self.ren.ResetCamera()
+        #         self.ren_win.Render()
+
+        #     else:
+
+        #         self.actor_vol.VisibilityOff()
+        #         self.ren.ResetCamera()
+        #         self.ren_win.Render()
 
     def on_iso_cbox(self, state):
 
@@ -215,6 +248,29 @@ class Basic(QtGui.QMainWindow):
         cam.SetViewUp(0, 0, -1)
         cam.Azimuth(45)
         self.ren.ResetCameraClippingRange()
+
+    def is_path_changed(self, path):
+
+        # import os.path
+
+        # try:
+        #     os.path.exist(path)
+        # except IOError, e:
+        #     print 'IOError:', e
+
+        if self.path_name == path:
+            return False
+
+        else:
+            return True
+
+    def close_image(self):
+
+        del self.reader
+        self.reader = None
+
+    def is_changed(self, obj):
+        pass
 
     # TEST
     def on_test_btn(self):

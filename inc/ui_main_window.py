@@ -60,8 +60,8 @@ class Ui_MainWindow(object):
         self.render_vboxlayout.addWidget(self.iso_cbox)
         self.render_vboxlayout.addWidget(self.plane_cbox)
 
-        self.isosurf_btn = QtGui.QPushButton('Isosurface')
-        self.volume_btn = QtGui.QPushButton('Volume Rendering')
+        # self.isosurf_btn = QtGui.QPushButton('Isosurface')
+        # self.volume_btn = QtGui.QPushButton('Volume Rendering')
 
         # Layout of widgets
         self.gridlayout.addWidget(self.vtk_widget, 2, 0, 10, 1)
