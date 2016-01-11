@@ -26,10 +26,6 @@ class MedicalObject(object):
         self.origin = self.reader.GetOrigin()
         self.value_range = self.reader.GetScalarRange()
 
-        # Actors
-        self.iso_actor = vtk.vtk.vtkActor()
-        # self.vol_actor = vtk.vtkVolume()
-
         self.plane_widget_x = vtk.vtkImagePlaneWidget()
         self.plane_widget_y = vtk.vtkImagePlaneWidget()
         self.plane_widget_z = vtk.vtkImagePlaneWidget()
@@ -158,15 +154,16 @@ class MedicalObject(object):
         mapper.SetInputConnection(stripper.GetOutputPort())
         mapper.SetScalarVisibility(False)
 
-        self.iso_actor.SetMapper(mapper)
+        actor = vtk.vtkActor()
+        actor.SetMapper(mapper)
 
         # Default colour, should be changed.
-        self.iso_actor.GetProperty().SetDiffuseColor(
+        actor.GetProperty().SetDiffuseColor(
             [247.0 / 255.0, 150.0 / 255.0, 155.0 / 255.0])  # Look like red
-        self.iso_actor.GetProperty().SetSpecular(0.3)
-        self.iso_actor.GetProperty().SetSpecularPower(20)
+        actor.GetProperty().SetSpecular(0.3)
+        actor.GetProperty().SetSpecularPower(20)
 
-        return self.iso_actor
+        return actor
 
     def get_volume(self, color_file=None, volume_opacity=0.25):
         """
@@ -264,13 +261,13 @@ class MedicalObject(object):
 
         return self.reader.GetScalarRange()
 
-    def show_actor(self, actor):
+    # def show_actor(self, actor):
 
-        actor.VisibilityOn()
+    #     actor.VisibilityOn()
 
-    def hide_actor(self, actor):
+    # def hide_actor(self, actor):
 
-        actor.VisibilityOff()
+    #     actor.VisibilityOff()
 
     def get_transfer_functioin(self, color_file=None, volume_opacity=0.25):
         """

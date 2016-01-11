@@ -30,6 +30,10 @@ class Basic(QtGui.QMainWindow):
     """
 
     def __init__(self):
+        """
+        In practial application, a scene should have only ONE volume actor,
+        ONE or TWO isosurface actors, FOUR to FIVE image planes.
+        """
 
         super(Basic, self).__init__()
 
@@ -38,6 +42,7 @@ class Basic(QtGui.QMainWindow):
         self.path_name = None
 
         self.actor_iso = None
+        self.actor_iso_2 = None  # Not used now
         self.actor_vol = None
         self.plane_widget = None
 
@@ -83,30 +88,38 @@ class Basic(QtGui.QMainWindow):
     # Event Response Function
     def on_open_folder(self):
 
-        folder_name = QtGui.QFileDialog.getExistingDirectory(
+        path = QtGui.QFileDialog.getExistingDirectory(
             self, 'Open DICOM Folder', QtCore.QDir.currentPath(),
             QtGui.QFileDialog.ShowDirsOnly)
-        folder_name = str(folder_name)  # QString --> Python String
+        path = str(path)  # QString --> Python String
         # logging.info('No folder selected.')
         try:
-            not folder_name
+            not path
         except IOError, e:
             print IOError, e
 
         # For the first time file reading
-        if not self.path_name and folder_name:
-            self.path_name = folder_name
+        if not self.path_name and path:
+            self.path_name = path
 
         # After the first file reading
-        elif self.is_path_changed(folder_name) and folder_name:
+        elif self.is_path_changed(path) and path:
 
-            if hasattr(self.reader, 'vol_actor'):
-                self.ren.RemoveActor(self.reader.vol_actor)
+            # if hasattr(self.reader, 'vol_actor'):
+            #     self.reader.remove_actor(self.ren, self.vol_actor)
+
+            if self.actor_vol:
+                self.reader.remove_actor(self.ren, self.actor_vol)
+                self.actor_vol = None  # Don't forget this!
+
+            if self.actor_iso:
+                self.reader.remove_actor(self.ren, self.actor_iso)
+                self.actor_iso = None
 
             if self.reader:  # If there was a reader, delete it
                 del self.reader
 
-        self.path_name = folder_name
+        self.path_name = path
 
         self.reader = MedicalObject()
         self.reader.read(self.path_name)
@@ -131,68 +144,76 @@ class Basic(QtGui.QMainWindow):
 
     def on_open_file(self):
 
-        file_name = QtGui.QFileDialog.getOpenFileName(
+        path = QtGui.QFileDialog.getOpenFileName(
             self, 'Open Meta Image', QtCore.QDir.currentPath(),
             'Meta Image (*.mha *.mhd)')
 
-        file_name = str(file_name)
-        # assert file_name, 'No file selected.'  # Debug
+        path = str(path)
+        # assert path, 'No file selected.'  # Debug
         logging.info('No file selected.')
 
-        if file_name:  # if file_name is not an empty string
+        try:
+            not path
+        except IOError, e:
+            print IOError, e
 
-            self.path_name = file_name
-            self.reader.read(self.path_name)
+        # For the first time file reading
+        if not self.path_name and path:
+            self.path_name = path
 
-            self.ui.vol_cbox.setCheckable(True)
-            self.ui.iso_cbox.setCheckable(True)
-            self.ui.plane_cbox.setCheckable(True)
+        # After the first file reading
+        elif self.is_path_changed(path) and path:
 
-            self.ui.vol_cbox.setChecked(False)
-            self.ui.iso_cbox.setChecked(False)
-            self.ui.plane_cbox.setChecked(False)
+            # if hasattr(self.reader, 'vol_actor'):
+            #     self.reader.remove_actor(self.ren, self.vol_actor)
+
+            if self.actor_vol:
+                self.reader.remove_actor(self.ren, self.actor_vol)
+                self.actor_vol = None  # Don't forget this!
+
+            if self.actor_iso:
+                self.reader.remove_actor(self.ren, self.actor_iso)
+                self.actor_iso = None
+
+            if self.reader:  # If there was a reader, delete it
+                del self.reader
+
+        self.path_name = path
+
+        self.reader = MedicalObject()
+        self.reader.read(self.path_name)
+
+        self.ui.vol_cbox.setCheckable(True)
+        self.ui.iso_cbox.setCheckable(True)
+        self.ui.plane_cbox.setCheckable(True)
+
+        self.ui.vol_cbox.setChecked(False)
+        self.ui.iso_cbox.setChecked(False)
+        self.ui.plane_cbox.setChecked(False)
 
     def on_volume_cbox(self, state):
 
         if self.reader is not None:
             logging.info('"self.reader" exists.')
 
-            if not hasattr(self.reader, 'vol_actor'):
-                setattr(self.reader, 'vol_actor', None)
-                self.reader.vol_actor = self.reader.get_volume()
-                self.reader.add_actor(self.ren, self.reader.vol_actor)
+            if self.actor_vol is None:
+                self.actor_vol = self.reader.get_volume()
+                self.reader.add_actor(self.ren, self.actor_vol)
 
             if state == QtCore.Qt.Checked:
-                self.reader.vol_actor.VisibilityOn()
+                self.actor_vol.VisibilityOn()
 
             else:
-                self.reader.vol_actor.VisibilityOff()
+                self.actor_vol.VisibilityOff()
 
             self.ren.ResetCamera()
             self.ren_win.Render()
 
-        # if self.path_name:
-
-        #     if self.actor_vol is None:
-        #         self.actor_vol = self.reader.get_volume()
-        #         self.reader.add_actor(self.ren, self.actor_vol)
-
-        #     if state == QtCore.Qt.Checked:
-
-        # self.better_camera()
-        #         self.actor_vol.VisibilityOn()
-        #         self.ren.ResetCamera()
-        #         self.ren_win.Render()
-
-        #     else:
-
-        #         self.actor_vol.VisibilityOff()
-        #         self.ren.ResetCamera()
-        #         self.ren_win.Render()
-
     def on_iso_cbox(self, state):
 
-        if self.path_name:
+        # if self.path_name:
+        if self.reader is not None:
+            logging.info('"self.reader" exists.')
 
             if self.actor_iso is None:
                 self.actor_iso = self.reader.get_isosurface(500)
@@ -200,15 +221,12 @@ class Basic(QtGui.QMainWindow):
 
             if state == QtCore.Qt.Checked:
                 self.actor_iso.VisibilityOn()
-                # self.better_camera()
-                self.ren.ResetCamera()
-                self.ren_win.Render()
 
             else:
-                # self.reader.remove_actor(self.ren, actor)
                 self.actor_iso.VisibilityOff()
-                self.ren.ResetCamera()
-                self.ren_win.Render()
+
+            self.ren.ResetCamera()
+            self.ren_win.Render()
 
     def on_plane_cbox(self, state):
 
