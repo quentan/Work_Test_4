@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from PyQt4 import QtGui
@@ -51,13 +52,16 @@ class Ui_MainWindow(object):
         self.open_hboxlayout.addWidget(self.open_folder_radio)
         self.open_hboxlayout.addWidget(self.open_file_radio)
 
-        # Test
+        # For 3 vtkImagePlaneWidget
         self.plane_gbox = QtGui.QGroupBox()
+        # self.plane_gbox.setStyleSheet("QGroupBox {border: 0, solid;\
+        #                                           }")
         self.plane_x_cbox = QtGui.QCheckBox('X')  # x-plane
         self.plane_y_cbox = QtGui.QCheckBox('Y')
         self.plane_z_cbox = QtGui.QCheckBox('Z')
         self.plane_hboxlayout = QtGui.QHBoxLayout(self.plane_gbox)
-        self.plane_hboxlayout.addStretch(1)
+        # self.plane_hboxlayout.setSpacing(3)
+        # self.plane_hboxlayout.addStretch(1)
         self.plane_hboxlayout.addWidget(self.plane_x_cbox)
         self.plane_hboxlayout.addWidget(self.plane_y_cbox)
         self.plane_hboxlayout.addWidget(self.plane_z_cbox)
@@ -72,21 +76,14 @@ class Ui_MainWindow(object):
         self.render_vboxlayout.addWidget(self.vol_cbox)
         self.render_vboxlayout.addWidget(self.iso_cbox)
         self.render_vboxlayout.addWidget(self.plane_cbox)
-        self.render_vboxlayout.addWidget(self.plane_gbox)
-
-
-
+        # self.render_vboxlayout.addWidget(self.plane_gbox)
 
         # Reset Camera Button
         self.reset_camera_btn = QtGui.QPushButton('Reset Camera')
 
         # Layout of widgets
         self.gridlayout.addWidget(self.vtk_widget, 2, 0, 10, 1)
-        # self.gridlayout.addWidget(self.open_folder_btn, 2, 1)
-        # self.gridlayout.addWidget(self.open_file_btn, 3, 1)
         self.gridlayout.addWidget(self.open_gbox, 2, 1)
-        # self.gridlayout.addWidget(self.isosurf_btn, 4, 1)
-        # self.gridlayout.addWidget(self.volume_btn, 5, 1)
         self.gridlayout.addWidget(self.render_gbox, 3, 1)
 
         self.gridlayout.addWidget(self.reset_camera_btn, 9, 1)
@@ -98,3 +95,15 @@ class Ui_MainWindow(object):
         self.gridlayout.addWidget(self.test_spin, 11, 1)
 
         main_window.setCentralWidget(self.central_widget)
+
+if __name__ == '__main__':
+    '''
+    Make the UI executable to debug it.
+    '''
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    w = QtGui.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setup_ui(w)
+    w.show()
+    sys.exit(app.exec_())

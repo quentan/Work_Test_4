@@ -70,7 +70,6 @@ class Basic(QtGui.QMainWindow):
         self.ui.open_folder_radio.clicked[bool].connect(self.on_open_folder)
         self.ui.open_file_radio.clicked[bool].connect(self.on_open_file)
         self.ui.test_btn.clicked.connect(self.on_test_btn)
-        # self.ui.volume_btn.clicked.connect(self.on_volume_btn)
         self.ui.vol_cbox.stateChanged.connect(self.on_volume_cbox)
         self.ui.iso_cbox.stateChanged.connect(self.on_iso_cbox)
         self.ui.plane_cbox.stateChanged.connect(self.on_plane_cbox)
