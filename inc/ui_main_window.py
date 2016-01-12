@@ -51,6 +51,17 @@ class Ui_MainWindow(object):
         self.open_hboxlayout.addWidget(self.open_folder_radio)
         self.open_hboxlayout.addWidget(self.open_file_radio)
 
+        # Test
+        self.plane_gbox = QtGui.QGroupBox()
+        self.plane_x_cbox = QtGui.QCheckBox('X')  # x-plane
+        self.plane_y_cbox = QtGui.QCheckBox('Y')
+        self.plane_z_cbox = QtGui.QCheckBox('Z')
+        self.plane_hboxlayout = QtGui.QHBoxLayout(self.plane_gbox)
+        self.plane_hboxlayout.addStretch(1)
+        self.plane_hboxlayout.addWidget(self.plane_x_cbox)
+        self.plane_hboxlayout.addWidget(self.plane_y_cbox)
+        self.plane_hboxlayout.addWidget(self.plane_z_cbox)
+
         # QGroupBox with 3 QCheckBox. For rendering
         self.render_gbox = QtGui.QGroupBox('Rendering')  # gbox: Group Box
         self.vol_cbox = QtGui.QCheckBox('Volume')  # cbox: Check Box
@@ -61,6 +72,10 @@ class Ui_MainWindow(object):
         self.render_vboxlayout.addWidget(self.vol_cbox)
         self.render_vboxlayout.addWidget(self.iso_cbox)
         self.render_vboxlayout.addWidget(self.plane_cbox)
+        self.render_vboxlayout.addWidget(self.plane_gbox)
+
+
+
 
         # Reset Camera Button
         self.reset_camera_btn = QtGui.QPushButton('Reset Camera')
