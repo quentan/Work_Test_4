@@ -41,8 +41,10 @@ class Ui_MainWindow(object):
         self.open_gbox = QtGui.QGroupBox('Open Image')
         self.open_folder_radio = QtGui.QRadioButton('Folder')
         self.open_folder_radio.setCheckable(True)
+        self.open_folder_radio.setStatusTip('Open DICOM folder')
         self.open_file_radio = QtGui.QRadioButton('File')
         self.open_file_radio.setCheckable(True)
+        self.open_file_radio.setStatusTip('Open single medical image')
         # hbox: Horizontal Box
         self.open_hboxlayout = QtGui.QHBoxLayout(self.open_gbox)
         self.open_hboxlayout.setSpacing(3)
@@ -60,8 +62,8 @@ class Ui_MainWindow(object):
         self.render_vboxlayout.addWidget(self.iso_cbox)
         self.render_vboxlayout.addWidget(self.plane_cbox)
 
-        # self.isosurf_btn = QtGui.QPushButton('Isosurface')
-        # self.volume_btn = QtGui.QPushButton('Volume Rendering')
+        # Reset Camera Button
+        self.reset_camera_btn = QtGui.QPushButton('Reset Camera')
 
         # Layout of widgets
         self.gridlayout.addWidget(self.vtk_widget, 2, 0, 10, 1)
@@ -71,6 +73,8 @@ class Ui_MainWindow(object):
         # self.gridlayout.addWidget(self.isosurf_btn, 4, 1)
         # self.gridlayout.addWidget(self.volume_btn, 5, 1)
         self.gridlayout.addWidget(self.render_gbox, 3, 1)
+
+        self.gridlayout.addWidget(self.reset_camera_btn, 9, 1)
 
         # TEST
         self.test_btn = QtGui.QPushButton('Test Button')

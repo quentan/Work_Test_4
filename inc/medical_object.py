@@ -26,9 +26,9 @@ class MedicalObject(object):
         self.origin = self.reader.GetOrigin()
         self.value_range = self.reader.GetScalarRange()
 
-        self.plane_widget_x = vtk.vtkImagePlaneWidget()
-        self.plane_widget_y = vtk.vtkImagePlaneWidget()
-        self.plane_widget_z = vtk.vtkImagePlaneWidget()
+        # self.plane_widget_x = vtk.vtkImagePlaneWidget()
+        # self.plane_widget_y = vtk.vtkImagePlaneWidget()
+        # self.plane_widget_z = vtk.vtkImagePlaneWidget()
 
         self.flag_read = False
 
@@ -200,9 +200,9 @@ class MedicalObject(object):
 
         return actor
 
-    def generate_plane(self, axis=0, slice_idx=10, color=[1, 0, 0], key='i'):
+    def get_plane(self, axis=0, slice_idx=10, color=[1, 0, 0], key='i'):
         """
-        Inner function for ONE plane widget
+        ONE plane widget
         """
 
         plane = vtk.vtkImagePlaneWidget()
@@ -222,24 +222,24 @@ class MedicalObject(object):
 
         return plane
 
-    def get_planes(self):
-        """
-        Get 3 plane widgets and reture
-        """
-        if not self.flag_read:
-            sys.stderr.write('No Image Loaded.')
-            return
+    # def get_planes(self):
+    #     """
+    #     Get 3 plane widgets and reture
+    #     """
+    #     if not self.flag_read:
+    #         sys.stderr.write('No Image Loaded.')
+    #         return
 
-        dims = self.reader.GetDimensions()
+    #     dims = self.reader.GetDimensions()
 
-        self.plane_widget_x = self.generate_plane(
-            axis=0, slice_idx=dims[0] / 2, color=[1, 0, 0], key='x')
-        self.plane_widget_y = self.generate_plane(
-            axis=1, slice_idx=dims[1] / 2, color=[1, 1, 0], key='y')
-        plane_widget_z = self.generate_plane(
-            axis=2, slice_idx=dims[2] / 2, color=[0, 0, 1], key='z')
+    #     self.plane_widget_x = self.generate_plane(
+    #         axis=0, slice_idx=dims[0] / 2, color=[1, 0, 0], key='x')
+    #     self.plane_widget_y = self.generate_plane(
+    #         axis=1, slice_idx=dims[1] / 2, color=[1, 1, 0], key='y')
+    #     plane_widget_z = self.generate_plane(
+    #         axis=2, slice_idx=dims[2] / 2, color=[0, 0, 1], key='z')
 
-        return self.plane_widget_x, self.plane_widget_y, plane_widget_z
+    #     return self.plane_widget_x, self.plane_widget_y, plane_widget_z
 
     def show_planes(self, renderer, state=True):
 
@@ -353,3 +353,20 @@ class MedicalObject(object):
 
         else:
             return False
+
+    def get_info(self):
+
+        self.dims = self.reader.GetDimensions()
+        self.bounds = self.reader.GetBounds()
+        self.spacing = self.reader.GetSpacing()
+        self.origin = self.reader.GetOrigin()
+        self.value_range = self.reader.GetScalarRange()
+
+        # info = (self.dims, self.bounds, self.origin, self.value_range)
+        info = {'dims': self.dims,
+                'bounds': self.bounds,
+                'spacing': self.spacing,
+                'origin': self.origin,
+                'value_range': self.value_range}
+
+        return info

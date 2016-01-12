@@ -31,20 +31,26 @@ class Basic(QtGui.QMainWindow):
 
     def __init__(self):
         """
-        In practial application, a scene should have only ONE volume actor,
+        In practial application, a rendering scene should have only ONE volume actor,
         ONE or TWO isosurface actors, FOUR to FIVE image planes.
         """
 
         super(Basic, self).__init__()
 
-        # self.reader = MedicalObject()
         self.reader = None
         self.path_name = None
 
         self.actor_iso = None
         self.actor_iso_2 = None  # Not used now
         self.actor_vol = None
-        self.plane_widget = None
+
+        self.plane_x = None
+        self.plane_y = None
+        self.plane_z = None
+
+        self.plane = None  # For single vtkImagePlaneWidget
+
+        self.info = None
 
         self.init_ui()
 
@@ -68,6 +74,7 @@ class Basic(QtGui.QMainWindow):
         self.ui.vol_cbox.stateChanged.connect(self.on_volume_cbox)
         self.ui.iso_cbox.stateChanged.connect(self.on_iso_cbox)
         self.ui.plane_cbox.stateChanged.connect(self.on_plane_cbox)
+        self.ui.reset_camera_btn.clicked.connect(self.on_reset_camera_btn)
 
         self.marker = Marker(self.iren)  # Annotation Cube
         self.marker.show()
@@ -91,56 +98,18 @@ class Basic(QtGui.QMainWindow):
         path = QtGui.QFileDialog.getExistingDirectory(
             self, 'Open DICOM Folder', QtCore.QDir.currentPath(),
             QtGui.QFileDialog.ShowDirsOnly)
-        path = str(path)  # QString --> Python String
-        # logging.info('No folder selected.')
-        try:
-            not path
-        except IOError, e:
-            print IOError, e
 
-        # For the first time file reading
-        if not self.path_name and path:
-            self.path_name = path
+        self._read(path)
 
-        # After the first file reading
-        elif self.is_path_changed(path) and path:
+        # Test
+        # min, max = self.reader.get_value_range()
+        # self.ui.test_spin.setMinimum(min)
+        # self.ui.test_spin.setMaximum(max)
+        # self.ui.test_spin.setSingleStep(50)
+        # self.ui.test_spin.setValue(int(max - (max - min) * 0.618))
 
-            # if hasattr(self.reader, 'vol_actor'):
-            #     self.reader.remove_actor(self.ren, self.vol_actor)
-
-            if self.actor_vol:
-                self.reader.remove_actor(self.ren, self.actor_vol)
-                self.actor_vol = None  # Don't forget this!
-
-            if self.actor_iso:
-                self.reader.remove_actor(self.ren, self.actor_iso)
-                self.actor_iso = None
-
-            if self.reader:  # If there was a reader, delete it
-                del self.reader
-
-        self.path_name = path
-
-        self.reader = MedicalObject()
-        self.reader.read(self.path_name)
-
-        self.ui.vol_cbox.setCheckable(True)
-        self.ui.iso_cbox.setCheckable(True)
-        self.ui.plane_cbox.setCheckable(True)
-
-        self.ui.vol_cbox.setChecked(False)
-        self.ui.iso_cbox.setChecked(False)
-        self.ui.plane_cbox.setChecked(False)
-
-            # Test
-            # min, max = self.reader.get_value_range()
-            # self.ui.test_spin.setMinimum(min)
-            # self.ui.test_spin.setMaximum(max)
-            # self.ui.test_spin.setSingleStep(50)
-            # self.ui.test_spin.setValue(int(max - (max - min) * 0.618))
-
-            # self.better_camera()
-            # self.ren_win.Render()
+        # self.better_camera()
+        # self.ren_win.Render()
 
     def on_open_file(self):
 
@@ -148,9 +117,15 @@ class Basic(QtGui.QMainWindow):
             self, 'Open Meta Image', QtCore.QDir.currentPath(),
             'Meta Image (*.mha *.mhd)')
 
+        self._read(path)
+
+    def _read(self, path):
+        """
+        Common thing of reading image(s)
+        """
         path = str(path)
         # assert path, 'No file selected.'  # Debug
-        logging.info('No file selected.')
+        logging.info('No file or folder selected.')
 
         try:
             not path
@@ -164,9 +139,6 @@ class Basic(QtGui.QMainWindow):
         # After the first file reading
         elif self.is_path_changed(path) and path:
 
-            # if hasattr(self.reader, 'vol_actor'):
-            #     self.reader.remove_actor(self.ren, self.vol_actor)
-
             if self.actor_vol:
                 self.reader.remove_actor(self.ren, self.actor_vol)
                 self.actor_vol = None  # Don't forget this!
@@ -175,6 +147,18 @@ class Basic(QtGui.QMainWindow):
                 self.reader.remove_actor(self.ren, self.actor_iso)
                 self.actor_iso = None
 
+            if self.plane_x:
+                self.plane_x.Off()
+                self.plane_x = None
+
+            if self.plane_y:
+                self.plane_y.Off()
+                self.plane_y = None
+
+            if self.plane_z:
+                self.plane_z.Off()
+                self.plane_z = None
+
             if self.reader:  # If there was a reader, delete it
                 del self.reader
 
@@ -182,6 +166,8 @@ class Basic(QtGui.QMainWindow):
 
         self.reader = MedicalObject()
         self.reader.read(self.path_name)
+
+        self.info = self.reader.get_info()
 
         self.ui.vol_cbox.setCheckable(True)
         self.ui.iso_cbox.setCheckable(True)
@@ -230,33 +216,42 @@ class Basic(QtGui.QMainWindow):
 
     def on_plane_cbox(self, state):
 
-        if self.path_name:
-            plane_x, plane_y, plane_z = self.reader.get_planes()
-            plane_x.SetInteractor(self.iren)
-            plane_y.SetInteractor(self.iren)
-            plane_z.SetInteractor(self.iren)
+        if self.reader is not None:
+            logging.info('"self.reader" exists.')
 
-            if self.plane_widget is None:
-                self.plane_widget = plane_z
+            dims = self.info['dims']
+
+            if self.plane_x is None:
+                self.plane_x = self.reader.get_plane(
+                    axis=0, slice_idx=dims[0] / 2, color=[1, 0, 0], key='x')
+                self.plane_x.SetInteractor(self.iren)
+
+            if self.plane_y is None:
+                self.plane_y = self.reader.get_plane(
+                    axis=1, slice_idx=dims[1] / 2, color=[1, 1, 0], key='y')
+                self.plane_y.SetInteractor(self.iren)
+
+            if self.plane_z is None:
+                self.plane_z = self.reader.get_plane(
+                    axis=2, slice_idx=dims[2] / 2, color=[0, 0, 1], key='z')
+                self.plane_z.SetInteractor(self.iren)
 
             if state == QtCore.Qt.Checked:
-
-                # plane_x.On()
-                plane_x.SetEnabled(True)
-                plane_y.On()
-                # plane_z.On()
-                self.plane_widget.On()
+                self.plane_x.On()
+                self.plane_y.On()
+                self.plane_z.On()
 
             else:
-                logging.info('Plane CheckBox is unchecked!')
+                self.plane_x.Off()
+                self.plane_y.Off()
+                self.plane_z.Off()
 
-                # plane_x.Off()
-                plane_x.SetEnabled(False)
-                plane_y.Off()
-                # plane_z.Off()
-                self.plane_widget.Off()
-
+            self.ren.ResetCamera()
             self.ren_win.Render()
+
+    def on_reset_camera_btn(self):
+
+        self.ren.ResetCamera()
 
     def better_camera(self):
 
